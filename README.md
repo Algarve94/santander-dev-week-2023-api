@@ -126,5 +126,5 @@ O fluxo ETL funciona nos dois casos — o aprendizado é o mesmo.
 ---
 
 Baseado no projeto original da [DIO — Santander Dev Week 2023](https://github.com/falvojr/santander-dev-week-2023).  
-Feito com 🧡 por Algarve94
+Feito com 🧡 por Lucas Algarve Pereira
 
