@@ -1,66 +1,130 @@
-# Santander Dev Week 2023 Java API
+# 🚀 Santander Dev Week 2023 — Pipeline ETL com IA Generativa
 
-RESTful API da Santander Dev Week 2023 construída em Java 17 com Spring Boot 3.
+Projeto desenvolvido durante a **Santander Dev Week 2023** na [DIO](https://dio.me).  
+Implementa um pipeline **ETL completo** que consome a API do Santander, enriquece os dados com IA generativa e devolve o resultado à origem.
 
-## Principais Tecnologias
- - **Java 17**: Utilizaremos a versão LTS mais recente do Java para tirar vantagem das últimas inovações que essa linguagem robusta e amplamente utilizada oferece;
- - **Spring Boot 3**: Trabalharemos com a mais nova versão do Spring Boot, que maximiza a produtividade do desenvolvedor por meio de sua poderosa premissa de autoconfiguração;
- - **Spring Data JPA**: Exploraremos como essa ferramenta pode simplificar nossa camada de acesso aos dados, facilitando a integração com bancos de dados SQL;
- - **OpenAPI (Swagger)**: Vamos criar uma documentação de API eficaz e fácil de entender usando a OpenAPI (Swagger), perfeitamente alinhada com a alta produtividade que o Spring Boot oferece;
- - **Railway**: facilita o deploy e monitoramento de nossas soluções na nuvem, além de oferecer diversos bancos de dados como serviço e pipelines de CI/CD.
+---
 
-## [Link do Figma](https://www.figma.com/file/0ZsjwjsYlYd3timxqMWlbj/SANTANDER---Projeto-Web%2FMobile?type=design&node-id=1421%3A432&mode=design&t=6dPQuerScEQH0zAn-1)
+## 📐 Arquitetura
 
-O Figma foi utilizado para a abstração do domínio desta API, sendo útil na análise e projeto da solução.
-
-## Diagrama de Classes (Domínio da API)
-
-```mermaid
-classDiagram
-  class User {
-    -String name
-    -Account account
-    -Feature[] features
-    -Card card
-    -News[] news
-  }
-
-  class Account {
-    -String number
-    -String agency
-    -Number balance
-    -Number limit
-  }
-
-  class Feature {
-    -String icon
-    -String description
-  }
-
-  class Card {
-    -String number
-    -Number limit
-  }
-
-  class News {
-    -String icon
-    -String description
-  }
-
-  User "1" *-- "1" Account
-  User "1" *-- "N" Feature
-  User "1" *-- "1" Card
-  User "1" *-- "N" News
+```
+SDW2023.csv  (lista de IDs)
+      │
+      ▼
+┌──────────────┐
+│  EXTRAÇÃO    │  GET /users/{id} → busca dados de cada cliente na API
+└──────┬───────┘
+       │
+       ▼
+┌──────────────────┐
+│  TRANSFORMAÇÃO   │  Claude (Anthropic API) gera mensagem personalizada
+│  (IA Generativa) │  sobre investimentos para cada cliente
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────┐
+│ CARREGAMENTO │  PUT /users/{id} → salva a mensagem no campo "news" da API
+└──────────────┘
+       │
+       └─ Se a API estiver fora do ar: salva resultado em resultado_etl.json
 ```
 
-## Documentação da API (Swagger)
+---
 
-### [https://sdw-2023-prd.up.railway.app/swagger-ui.html](https://sdw-2023-prd.up.railway.app/swagger-ui.html)
+## 📁 Estrutura
 
-Esta API ficará disponível no Railway por um período de tempo limitado, mas este é um código-fonte aberto. Portanto, sintam-se à vontade para cloná-lo, modificá-lo (já que é um bom projeto base para novos projetos) e executar localmente ou onde achar mais interessante! Só não esquece de marcar a gente quando divulgar a sua solução 🥰
+```
+santander-etl/
+├── SDW2023.csv          # IDs dos usuários (entrada)
+├── etl.py               # Pipeline ETL completo
+├── resultado_etl.json   # Saída gerada quando a API está fora do ar
+└── README.md
+```
 
-### IMPORTANTE
+---
 
-Aos interessados no desenvolvimento da tela inicial do App do Santander (Figma) em Angular, Android, iOS ou Flutter... Caso a URL produtiva não esteja mais disponível, deixamos um Backup no GitHub Pages, é só dar um GET lá 😘
-- URL de Produção: https://sdw-2023-prd.up.railway.app/users/1
-- Mock (Backup): https://digitalinnovationone.github.io/santander-dev-week-2023-api/mocks/find_one.json
+## ▶️ Executando
+
+### 1. Repositório
+```bash
+git clone https://github.com/seu-usuario/santander-etl.git
+cd santander-etl
+```
+
+### 2. Chave da Anthropic (opcional)
+Sem a chave o pipeline roda com mensagens padrão — ótimo para testes.
+
+```bash
+# Linux / macOS
+export ANTHROPIC_API_KEY="sk-ant-..."
+
+# Windows (PowerShell)
+$env:ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+### 3. Executar
+```bash
+python etl.py
+```
+
+---
+
+## 🔄 Comportamento com a API fora do ar
+
+A API pública (`sdw-2023-prd.up.railway.app`) foi descontinuada. O script lida com isso automaticamente:
+
+| Situação | Extração | Carregamento |
+|----------|----------|--------------|
+| API disponível | GET /users/{id} | PUT /users/{id} |
+| API fora do ar | Dados fictícios (fallback) | Salva `resultado_etl.json` |
+
+O fluxo ETL funciona nos dois casos — o aprendizado é o mesmo.
+
+---
+
+## 📊 Exemplo de Saída (`resultado_etl.json`)
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Ana Lima",
+    "account": { "balance": 2500.0, "limit": 500.0 },
+    "card": { "limit": 3000.0 },
+    "news": [
+      {
+        "icon": "https://.../icons/credit.svg",
+        "description": "Ana, invista hoje para garantir um futuro seguro e próspero!"
+      }
+    ]
+  }
+]
+```
+
+---
+
+## 🛠 Tecnologias
+
+- **Python 3.11+** — apenas bibliotecas padrão (`csv`, `json`, `urllib`)
+- **Claude Sonnet (Anthropic API)** — geração de mensagens personalizadas
+- **Santander Dev Week 2023 API** — fonte e destino dos dados
+- Sem dependências externas (sem `pandas`, sem `requests`)
+
+---
+
+## 💡 Conceitos Demonstrados
+
+| Conceito | Onde |
+|----------|------|
+| Pipeline ETL | Funções `extrair`, `transformar`, `carregar` |
+| Consumo de API REST | `urllib.request` — GET e PUT |
+| IA Generativa | Prompt engineering com Claude |
+| Fallback gracioso | Funciona mesmo sem API disponível |
+| Variáveis de ambiente | `os.getenv` para a chave da API |
+| Tratamento de erros | `try/except` em todas as chamadas de rede |
+
+---
+
+Baseado no projeto original da [DIO — Santander Dev Week 2023](https://github.com/falvojr/santander-dev-week-2023).  
+Feito com 🧡 por Algarve94
+
