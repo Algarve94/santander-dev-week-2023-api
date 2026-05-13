@@ -1,4 +1,4 @@
-# 🚀 Santander Dev Week 2023 — Pipeline ETL com IA Generativa
+#  Santander Dev Week 2023 — Pipeline ETL com IA Generativa
 
 Projeto desenvolvido durante a **Santander Dev Week 2023** na [DIO](https://dio.me).  
 Implementa um pipeline **ETL completo** que consome a API do Santander, enriquece os dados com IA generativa e devolve o resultado à origem.
